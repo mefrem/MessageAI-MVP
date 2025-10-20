@@ -1,0 +1,27 @@
+{
+  "name": "messageai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MessageAI - Production-quality messaging app with Firebase and React Native",
+  "workspaces": [
+    "mobile",
+    "functions",
+    "shared"
+  ],
+  "scripts": {
+    "mobile": "cd mobile && expo start",
+    "mobile:ios": "cd mobile && expo start --ios",
+    "mobile:android": "cd mobile && expo start --android",
+    "functions:serve": "cd functions && npm run serve",
+    "functions:deploy": "cd functions && npm run deploy",
+    "test": "npm run test --workspaces",
+    "install:all": "npm install && npm install --workspaces"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

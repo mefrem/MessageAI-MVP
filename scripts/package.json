@@ -1,0 +1,11 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "description": "Utility scripts for MessageAI",
+  "scripts": {
+    "seed": "node seedUsers.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
