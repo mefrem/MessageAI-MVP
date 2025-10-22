@@ -2,6 +2,87 @@
 
 A WhatsApp-level messaging application built with React Native, Expo, and Firebase, featuring real-time messaging, offline support, group chats, and image sharing.
 
+---
+
+## 🎯 Quick Demo (For Teachers/Reviewers)
+
+**Want to see the app in action? Follow these steps to run the already-configured app on your machine:**
+
+### Prerequisites
+- macOS with Xcode installed
+- Node.js 18+ installed
+- iOS Simulator (comes with Xcode)
+
+### Steps to Run (5 Minutes)
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/mefrem/MessageAI-MVP.git
+   cd MessageAI-MVP
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   cd mobile && npm install && cd ..
+   ```
+
+3. **Start the app**
+   ```bash
+   cd mobile
+   npx expo start --ios
+   ```
+   
+   This will automatically:
+   - Start the Metro bundler
+   - Open iOS Simulator
+   - Build and launch the app
+
+4. **Sign up as a new user**
+   - When the app opens, you'll see the sign-in screen
+   - Tap "Sign Up" at the bottom
+   - Enter your details:
+     - Email: `yourname@test.com`
+     - Display Name: `Your Name`
+     - Password: `password123` (or any password)
+   - Press Enter or tap "Sign Up"
+
+5. **Test the features!**
+   - **Chat with existing users**: Tap the `+` button and select "Alice Johnson", "Bob Smith", or "Charlie Davis"
+   - **Send messages**: Type and press Enter to send
+   - **Group chat**: Tap `+`, then tap multiple users to select them, then tap "Create Group"
+   - **Notifications**: Open a second simulator (see below) and send messages between users
+   - **Read receipts**: See checkmarks change from sent (✓) to read (✓✓)
+   - **Typing indicators**: See "typing..." when the other user is typing
+   - **Online status**: See green dot when users are active
+
+### Testing with Multiple Users (Optional)
+
+To see real-time messaging and notifications:
+
+1. **Open a second iOS simulator**:
+   ```bash
+   # In a new terminal
+   xcrun simctl list devices | grep Booted
+   # Note the device name
+   
+   # Open another simulator (e.g., iPhone 15)
+   open -a Simulator --args -CurrentDeviceUDID <device-uuid>
+   ```
+
+2. **Or use existing test accounts**:
+   - Email: `alice@test.com` / Password: `password123`
+   - Email: `bob@test.com` / Password: `password123`
+   - Email: `charlie@test.com` / Password: `password123`
+
+3. **Send messages between them** and watch:
+   - Messages appear instantly
+   - Notifications pop up at the top
+   - Read receipts update in real-time
+   - Typing indicators show when someone is typing
+
+---
+
 ## 🚀 Features
 
 ### Core Messaging
