@@ -25,3 +25,4 @@ export interface ConversationDocument {
   lastMessageAt: any | null; // Firestore Timestamp
   lastMessageType: "text" | "image" | null;
 }
+

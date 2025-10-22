@@ -94,6 +94,10 @@ export const AuthScreen: React.FC = () => {
             autoComplete="email"
             mode="outlined"
             style={styles.input}
+            returnKeyType="next"
+            onSubmitEditing={() => {
+              // Focus would move to password field
+            }}
           />
 
           <TextInput
@@ -105,6 +109,12 @@ export const AuthScreen: React.FC = () => {
             autoComplete="password"
             mode="outlined"
             style={styles.input}
+            returnKeyType={mode === "signup" ? "next" : "done"}
+            onSubmitEditing={() => {
+              if (mode === "signin") {
+                handleAuth();
+              }
+            }}
           />
 
           {mode === "signup" && (
@@ -115,6 +125,8 @@ export const AuthScreen: React.FC = () => {
               autoCapitalize="words"
               mode="outlined"
               style={styles.input}
+              returnKeyType="done"
+              onSubmitEditing={handleAuth}
             />
           )}
 

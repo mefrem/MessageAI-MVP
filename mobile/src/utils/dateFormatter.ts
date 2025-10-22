@@ -36,3 +36,4 @@ export const formatConversationTime = (date: Date): string => {
 export const formatRelativeTime = (date: Date): string => {
   return formatDistanceToNow(date, { addSuffix: true });
 };
+

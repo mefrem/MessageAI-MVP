@@ -5,3 +5,4 @@ admin.initializeApp();
 
 // Export Cloud Functions
 export { onMessageCreated } from "./triggers/onMessageCreated";
+

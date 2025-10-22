@@ -1,31 +1,25 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
-import { Conversation, User } from "@messageai/shared";
+import { Conversation } from "@messageai/shared";
 import { Avatar } from "../common/Avatar";
 import { formatConversationTime } from "../../utils/dateFormatter";
 
 interface ConversationItemProps {
   conversation: Conversation;
-  otherUser?: User;
+  displayName: string;
+  displayPhoto?: string;
   currentUserId: string;
   onPress: () => void;
 }
 
 export const ConversationItem: React.FC<ConversationItemProps> = ({
   conversation,
-  otherUser,
+  displayName,
+  displayPhoto,
   currentUserId,
   onPress,
 }) => {
-  const displayName =
-    conversation.type === "group"
-      ? conversation.name
-      : otherUser?.displayName || "Unknown";
-
-  const displayPhoto =
-    conversation.type === "group" ? conversation.photoURL : otherUser?.photoURL;
-
   return (
     <TouchableOpacity
       style={styles.container}

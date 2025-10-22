@@ -123,3 +123,4 @@ export const onMessageCreated = functions.firestore
       console.error("Error sending push notification:", error);
     }
   });
+

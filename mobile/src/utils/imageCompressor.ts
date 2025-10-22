@@ -63,3 +63,4 @@ export const getImageDimensions = (
     height: Math.round(IMAGE_MAX_WIDTH * aspectRatio),
   };
 };
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, FlatList, StyleSheet, RefreshControl } from "react-native";
 import { Text, FAB } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
@@ -6,41 +6,18 @@ import { useConversations } from "../contexts/ConversationsContext";
 import { useAuth } from "../contexts/AuthContext";
 import { ConversationItem } from "../components/conversation/ConversationItem";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
-import { User } from "@messageai/shared";
-import { authService } from "../services/authService";
 
 export const ConversationListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const { conversations, loading, refreshConversations } = useConversations();
-  const [users, setUsers] = useState<Record<string, User>>({});
+  const {
+    conversations,
+    loading,
+    refreshConversations,
+    getParticipantName,
+    getParticipantPhotoURL,
+  } = useConversations();
   const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    // Load user profiles for conversations
-    const loadUsers = async () => {
-      const userIds = new Set<string>();
-      conversations.forEach((conv) => {
-        if (conv.type === "oneOnOne") {
-          const otherUserId = conv.participants.find((id) => id !== user?.id);
-          if (otherUserId) userIds.add(otherUserId);
-        }
-      });
-
-      const userProfiles: Record<string, User> = {};
-      for (const userId of Array.from(userIds)) {
-        const profile = await authService.getUserProfile(userId);
-        if (profile) {
-          userProfiles[userId] = profile;
-        }
-      }
-      setUsers(userProfiles);
-    };
-
-    if (conversations.length > 0 && user) {
-      loadUsers();
-    }
-  }, [conversations, user]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -80,12 +57,26 @@ export const ConversationListScreen: React.FC = () => {
               item.type === "oneOnOne"
                 ? item.participants.find((id) => id !== user?.id)
                 : null;
-            const otherUser = otherUserId ? users[otherUserId] : undefined;
+
+            const displayName =
+              item.type === "group"
+                ? item.name
+                : otherUserId
+                ? getParticipantName(otherUserId)
+                : null;
+
+            const displayPhoto =
+              item.type === "group"
+                ? item.photoURL
+                : otherUserId
+                ? getParticipantPhotoURL(otherUserId)
+                : null;
 
             return (
               <ConversationItem
                 conversation={item}
-                otherUser={otherUser}
+                displayName={displayName || "Unknown"}
+                displayPhoto={displayPhoto || undefined}
                 currentUserId={user?.id || ""}
                 onPress={() => handleConversationPress(item.id)}
               />

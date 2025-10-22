@@ -47,3 +47,4 @@ Creates test users in your Firebase project for easy testing.
 
 To delete mock users, use the Firebase Console:
 https://console.firebase.google.com/project/messageai-mvp/authentication/users
+

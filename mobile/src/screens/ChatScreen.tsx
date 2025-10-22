@@ -7,10 +7,15 @@ import {
   Platform,
 } from "react-native";
 import { Appbar, Text } from "react-native-paper";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import {
+  useRoute,
+  useNavigation,
+  useFocusEffect,
+} from "@react-navigation/native";
 import { useMessages } from "../contexts/MessagesContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useConversations } from "../contexts/ConversationsContext";
+import { useNotification } from "../contexts/NotificationContext";
 import { MessageBubble } from "../components/chat/MessageBubble";
 import { ChatInput } from "../components/chat/ChatInput";
 import { TypingIndicator } from "../components/chat/TypingIndicator";
@@ -33,7 +38,8 @@ export const ChatScreen: React.FC = () => {
     setTyping,
     typingUsers,
   } = useMessages();
-  const { getConversation } = useConversations();
+  const { getConversationAsync } = useConversations();
+  const { setCurrentConversation } = useNotification();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [otherUsers, setOtherUsers] = useState<Record<string, User>>({});
   const flatListRef = useRef<FlatList>(null);
@@ -44,6 +50,16 @@ export const ChatScreen: React.FC = () => {
       ?.map((id) => otherUsers[id]?.displayName)
       .filter(Boolean) || [];
 
+  // Track current conversation for notifications
+  useFocusEffect(
+    React.useCallback(() => {
+      setCurrentConversation(conversationId);
+      return () => {
+        setCurrentConversation(null);
+      };
+    }, [conversationId])
+  );
+
   // Start listening to messages when component mounts
   useEffect(() => {
     startListening(conversationId);
@@ -52,7 +68,7 @@ export const ChatScreen: React.FC = () => {
   useEffect(() => {
     // Load conversation details
     const loadConversation = async () => {
-      const conv = await getConversation(conversationId);
+      const conv = await getConversationAsync(conversationId);
       if (conv) {
         setConversation(conv);
 

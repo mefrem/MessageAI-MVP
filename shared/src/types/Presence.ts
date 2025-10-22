@@ -13,3 +13,4 @@ export interface PresenceDocument {
   lastSeen: any; // Firestore Timestamp
   updatedAt: any; // Firestore Timestamp
 }
+

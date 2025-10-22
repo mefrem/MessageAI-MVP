@@ -6,3 +6,4 @@ export const IMAGE_COMPRESSION_QUALITY = 0.8;
 export const IMAGE_MAX_WIDTH = 1920;
 export const RETRY_MAX_ATTEMPTS = 3;
 export const RETRY_BASE_DELAY = 1000;
+

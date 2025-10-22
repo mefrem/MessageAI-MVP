@@ -8,7 +8,6 @@ export interface User {
 }
 
 export interface UserDocument {
-  id: string;
   email: string;
   displayName: string;
   photoURL: string | null;

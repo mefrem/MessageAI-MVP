@@ -11,3 +11,4 @@ export interface TypingStatusDocument {
   isTyping: boolean;
   timestamp: any; // Firestore Timestamp
 }
+

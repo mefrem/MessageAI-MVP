@@ -9,3 +9,4 @@ export const logger = {
     console.warn(`[WARN] ${message}`, data || "");
   },
 };
+

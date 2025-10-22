@@ -19,7 +19,12 @@ export interface ConversationsContextValue {
     participantIds: string[],
     photoURL?: string
   ) => Promise<Conversation>;
-  getConversation: (conversationId: string) => Promise<Conversation | null>;
+  getConversation: (conversationId: string) => Conversation | null;
+  getConversationAsync: (
+    conversationId: string
+  ) => Promise<Conversation | null>;
+  getParticipantName: (userId: string) => string | null;
+  getParticipantPhotoURL: (userId: string) => string | null;
   getAllUsers: () => Promise<User[]>;
   addGroupMembers: (
     conversationId: string,
@@ -38,10 +43,12 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usersCache, setUsersCache] = useState<Record<string, User>>({});
 
   useEffect(() => {
     if (!user) {
       setConversations([]);
+      setUsersCache({});
       setLoading(false);
       return;
     }
@@ -68,6 +75,19 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [user]);
 
+  // Load users for caching participant names
+  useEffect(() => {
+    if (!user) return;
+
+    conversationService.getAllUsers().then((users) => {
+      const cache: Record<string, User> = {};
+      users.forEach((u) => {
+        cache[u.id] = u;
+      });
+      setUsersCache(cache);
+    });
+  }, [user]);
+
   const createOneOnOne = async (otherUserId: string): Promise<Conversation> => {
     if (!user) throw new Error("User not authenticated");
 
@@ -83,7 +103,9 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({
     participantIds: string[],
     photoURL?: string
   ): Promise<Conversation> => {
-    if (!user) throw new Error("User not authenticated");
+    if (!user || !user.id) {
+      throw new Error("User not authenticated");
+    }
 
     const conversation = await conversationService.createGroupConversation(
       user.id,
@@ -94,10 +116,24 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({
     return conversation;
   };
 
-  const getConversation = async (
+  const getConversation = (conversationId: string): Conversation | null => {
+    return conversations.find((c) => c.id === conversationId) || null;
+  };
+
+  const getConversationAsync = async (
     conversationId: string
   ): Promise<Conversation | null> => {
     return await conversationService.getConversation(conversationId);
+  };
+
+  const getParticipantName = (userId: string): string | null => {
+    const cachedUser = usersCache[userId];
+    return cachedUser?.displayName || null;
+  };
+
+  const getParticipantPhotoURL = (userId: string): string | null => {
+    const cachedUser = usersCache[userId];
+    return cachedUser?.photoURL || null;
   };
 
   const getAllUsers = async (): Promise<User[]> => {
@@ -124,6 +160,9 @@ export const ConversationsProvider: React.FC<{ children: ReactNode }> = ({
     createOneOnOne,
     createGroup,
     getConversation,
+    getConversationAsync,
+    getParticipantName,
+    getParticipantPhotoURL,
     getAllUsers,
     addGroupMembers,
     refreshConversations,

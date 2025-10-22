@@ -4,6 +4,7 @@ import React, {
   useEffect,
   useContext,
   ReactNode,
+  useRef,
 } from "react";
 import { Message } from "@messageai/shared";
 import { messageService } from "../services/messageService";
@@ -11,6 +12,8 @@ import { mediaService } from "../services/mediaService";
 import { offlineQueueService } from "../services/offlineQueueService";
 import { storageService } from "../services/storageService";
 import { useAuth } from "./AuthContext";
+import { useNotification } from "./NotificationContext";
+import { useConversations } from "./ConversationsContext";
 
 export interface MessagesContextValue {
   messages: Record<string, Message[]>;
@@ -35,15 +38,34 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
+  const { showNotification } = useNotification();
+  const { conversations, getConversation, getParticipantName } =
+    useConversations();
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [typingUsers, setTypingUsers] = useState<Record<string, string[]>>({});
   const [activeListeners, setActiveListeners] = useState<
     Record<string, () => void>
   >({});
+  const activeListenersRef = useRef<Record<string, () => void>>({});
+  const previousMessageCountRef = useRef<Record<string, number>>({});
+  const initializedConversationsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // User signed out - clean up everything
+      Object.values(activeListenersRef.current).forEach((unsubscribe) =>
+        unsubscribe()
+      );
+      setActiveListeners({});
+      activeListenersRef.current = {};
+      setMessages({});
+      setLoading({});
+      setTypingUsers({});
+      previousMessageCountRef.current = {};
+      initializedConversationsRef.current.clear();
+      return;
+    }
 
     // Set up offline queue processing
     offlineQueueService.startNetworkMonitoring(() => {
@@ -59,17 +81,67 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({
     return () => {
       offlineQueueService.stopNetworkMonitoring();
       // Clean up all message listeners
-      Object.values(activeListeners).forEach((unsubscribe) => unsubscribe());
+      Object.values(activeListenersRef.current).forEach((unsubscribe) =>
+        unsubscribe()
+      );
     };
   }, [user]);
 
+  // Automatically listen to all conversations for notifications
+  useEffect(() => {
+    if (!user || !conversations || conversations.length === 0) return;
+
+    // Start listening to all conversations
+    conversations.forEach((conversation) => {
+      if (!activeListenersRef.current[conversation.id]) {
+        loadMessagesForConversation(conversation.id);
+      }
+    });
+  }, [conversations, user]);
+
+  // Watch for new messages and show notifications
+  useEffect(() => {
+    if (!user) return;
+
+    // Check each conversation for new messages
+    Object.entries(messages).forEach(([conversationId, messageList]) => {
+      const prevCount = previousMessageCountRef.current[conversationId] || 0;
+      const isInitialized =
+        initializedConversationsRef.current.has(conversationId);
+
+      // If we have more messages than before AND conversation is initialized
+      if (messageList.length > prevCount && isInitialized) {
+        const newMessage = messageList[messageList.length - 1];
+
+        // Only show notification if message is from someone else
+        if (newMessage && newMessage.senderId !== user.id) {
+          const conversation = getConversation(conversationId);
+
+          if (conversation) {
+            const senderName =
+              getParticipantName(newMessage.senderId) || "Someone";
+            showNotification(newMessage, conversation, senderName);
+          }
+        }
+      }
+
+      // Update the ref AFTER checking for notifications
+      previousMessageCountRef.current[conversationId] = messageList.length;
+    });
+  }, [messages, user]);
+
   const loadMessagesForConversation = (conversationId: string) => {
-    if (!user || activeListeners[conversationId]) return;
+    if (!user || activeListenersRef.current[conversationId]) return;
+
+    // Mark as initialized IMMEDIATELY to skip notifications for initial messages
+    initializedConversationsRef.current.add(conversationId);
 
     // Load cached messages first
     storageService.getMessages(conversationId).then((cached) => {
       if (cached.length > 0) {
         setMessages((prev) => ({ ...prev, [conversationId]: cached }));
+        // Set the initial count so we don't notify for cached messages
+        previousMessageCountRef.current[conversationId] = cached.length;
       }
     });
 
@@ -98,8 +170,11 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({
     const combinedUnsubscribe = () => {
       messagesUnsubscribe();
       typingUnsubscribe();
+      delete activeListenersRef.current[conversationId];
     };
 
+    // Update both state and ref
+    activeListenersRef.current[conversationId] = combinedUnsubscribe;
     setActiveListeners((prev) => ({
       ...prev,
       [conversationId]: combinedUnsubscribe,
@@ -110,7 +185,7 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({
     if (!user) throw new Error("User not authenticated");
 
     // Ensure messages are being tracked
-    if (!activeListeners[conversationId]) {
+    if (!activeListenersRef.current[conversationId]) {
       loadMessagesForConversation(conversationId);
     }
 
@@ -168,7 +243,7 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const startListening = (conversationId: string) => {
-    if (!activeListeners[conversationId]) {
+    if (!activeListenersRef.current[conversationId]) {
       loadMessagesForConversation(conversationId);
     }
   };

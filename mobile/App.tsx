@@ -4,6 +4,7 @@ import { Provider as PaperProvider } from "react-native-paper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import { ConversationsProvider } from "./src/contexts/ConversationsContext";
+import { NotificationProvider } from "./src/contexts/NotificationContext";
 import { MessagesProvider } from "./src/contexts/MessagesContext";
 import { NetworkProvider } from "./src/contexts/NetworkContext";
 import { AppNavigator } from "./src/navigation/AppNavigator";
@@ -34,10 +35,12 @@ export default function App() {
         <NetworkProvider>
           <AuthProvider>
             <ConversationsProvider>
-              <MessagesProvider>
-                <StatusBar style="auto" />
-                <AppNavigator />
-              </MessagesProvider>
+              <NotificationProvider>
+                <MessagesProvider>
+                  <StatusBar style="auto" />
+                  <AppNavigator />
+                </MessagesProvider>
+              </NotificationProvider>
             </ConversationsProvider>
           </AuthProvider>
         </NetworkProvider>

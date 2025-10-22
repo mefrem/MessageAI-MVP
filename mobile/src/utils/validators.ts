@@ -39,3 +39,4 @@ export const getGroupNameError = (name: string): string | null => {
   if (!validateGroupName(name)) return "Group name must be 1-50 characters";
   return null;
 };
+

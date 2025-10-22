@@ -49,23 +49,25 @@ export const UserSelectionScreen: React.FC = () => {
     }
   };
 
-  const handleUserPress = async (selectedUser: User) => {
-    try {
-      setLoading(true);
-      const conversation = await createOneOnOne(selectedUser.id);
-      navigation.replace("Chat", { conversationId: conversation.id });
-    } catch (error) {
-      console.error("Error creating conversation:", error);
-      setLoading(false);
-    }
-  };
-
   const toggleUserSelection = (userId: string) => {
     setSelectedUsers((prev) =>
       prev.includes(userId)
         ? prev.filter((id) => id !== userId)
         : [...prev, userId]
     );
+  };
+
+  const handleCreateOneOnOne = async () => {
+    if (selectedUsers.length === 1) {
+      try {
+        setLoading(true);
+        const conversation = await createOneOnOne(selectedUsers[0]);
+        navigation.replace("Chat", { conversationId: conversation.id });
+      } catch (error) {
+        console.error("Error creating conversation:", error);
+        setLoading(false);
+      }
+    }
   };
 
   const handleCreateGroup = () => {
@@ -80,6 +82,15 @@ export const UserSelectionScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <Text variant="bodyMedium" style={styles.instructionText}>
+          {selectedUsers.length === 0
+            ? "Select users to start a chat or create a group"
+            : `${selectedUsers.length} user${
+                selectedUsers.length > 1 ? "s" : ""
+              } selected`}
+        </Text>
+      </View>
       <Searchbar
         placeholder="Search users..."
         onChangeText={handleSearch}
@@ -87,15 +98,27 @@ export const UserSelectionScreen: React.FC = () => {
         style={styles.searchBar}
       />
 
-      {selectedUsers.length >= 2 && (
+      {selectedUsers.length > 0 && (
         <View style={styles.actionContainer}>
-          <Button
-            mode="contained"
-            onPress={handleCreateGroup}
-            style={styles.createGroupButton}
-          >
-            Create Group ({selectedUsers.length} selected)
-          </Button>
+          {selectedUsers.length === 1 ? (
+            <Button
+              mode="contained"
+              onPress={handleCreateOneOnOne}
+              style={styles.createGroupButton}
+              icon="message"
+            >
+              Start Chat with {selectedUsers.length} person
+            </Button>
+          ) : (
+            <Button
+              mode="contained"
+              onPress={handleCreateGroup}
+              style={styles.createGroupButton}
+              icon="account-group"
+            >
+              Create Group ({selectedUsers.length} people)
+            </Button>
+          )}
         </View>
       )}
 
@@ -108,14 +131,18 @@ export const UserSelectionScreen: React.FC = () => {
               styles.userItem,
               selectedUsers.includes(item.id) && styles.selectedUserItem,
             ]}
-            onPress={() => handleUserPress(item)}
-            onLongPress={() => toggleUserSelection(item.id)}
+            onPress={() => toggleUserSelection(item.id)}
           >
             <Avatar uri={item.photoURL} name={item.displayName} size={48} />
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{item.displayName}</Text>
               <Text style={styles.userEmail}>{item.email}</Text>
             </View>
+            {selectedUsers.includes(item.id) && (
+              <View style={styles.checkmark}>
+                <Text style={styles.checkmarkText}>✓</Text>
+              </View>
+            )}
           </TouchableOpacity>
         )}
         ListEmptyComponent={
@@ -132,6 +159,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF",
+  },
+  headerContainer: {
+    padding: 16,
+    paddingBottom: 8,
+    backgroundColor: "#F5F5F5",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  instructionText: {
+    color: "#666",
+    textAlign: "center",
   },
   searchBar: {
     margin: 12,
@@ -171,5 +209,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
+  },
+  checkmark: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#2196F3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkmarkText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

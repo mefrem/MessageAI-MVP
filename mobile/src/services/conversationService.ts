@@ -80,13 +80,21 @@ export const conversationService = {
     photoURL?: string
   ): Promise<Conversation> {
     try {
-      const allParticipants = [currentUserId, ...participantIds];
+      // Validate inputs
+      if (!currentUserId || !name) {
+        throw new Error("Missing required fields: currentUserId or name");
+      }
 
-      const conversationData: Partial<ConversationDocument> = {
-        type: "group",
+      // Filter out any undefined participant IDs
+      const validParticipantIds = participantIds.filter((id) => id != null);
+      const allParticipants = [currentUserId, ...validParticipantIds];
+
+      // Ensure all fields are explicitly set (no undefined values)
+      const conversationData = {
+        type: "group" as const,
         participants: allParticipants,
-        name,
-        photoURL: photoURL || null,
+        name: name,
+        photoURL: photoURL ?? null,
         createdBy: currentUserId,
         createdAt: serverTimestamp(),
         lastMessage: null,
@@ -104,7 +112,7 @@ export const conversationService = {
         type: "group",
         participants: allParticipants,
         name,
-        photoURL: photoURL || null,
+        photoURL: photoURL ?? null,
         createdBy: currentUserId,
         createdAt: new Date(),
         lastMessage: null,
@@ -155,6 +163,12 @@ export const conversationService = {
     userId: string,
     callback: (conversations: Conversation[]) => void
   ) {
+    // Safety check: ensure userId is valid
+    if (!userId) {
+      console.warn("getUserConversations called with invalid userId");
+      return () => {}; // Return empty unsubscribe function
+    }
+
     const conversationsRef = collection(firestore, "conversations");
     const q = query(
       conversationsRef,

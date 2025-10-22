@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet } from "react-native";
 import { TextInput, Button, Text, Snackbar, Chip } from "react-native-paper";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useConversations } from "../contexts/ConversationsContext";
+import { useAuth } from "../contexts/AuthContext";
 import { mediaService } from "../services/mediaService";
 import { getGroupNameError } from "../utils/validators";
 import { Avatar } from "../components/common/Avatar";
@@ -14,6 +15,7 @@ export const GroupCreateScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { selectedUserIds } = route.params;
   const { createGroup } = useConversations();
+  const { user } = useAuth();
   const [groupName, setGroupName] = useState("");
   const [photoURL, setPhotoURL] = useState<string | null>(null);
   const [members, setMembers] = useState<User[]>([]);
@@ -53,6 +55,11 @@ export const GroupCreateScreen: React.FC = () => {
       return;
     }
 
+    if (!user || !user.id) {
+      setError("You must be signed in to create a group");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -68,8 +75,9 @@ export const GroupCreateScreen: React.FC = () => {
       const conversation = await createGroup(
         groupName,
         selectedUserIds,
-        uploadedPhotoURL
+        uploadedPhotoURL || undefined
       );
+
       navigation.replace("Chat", { conversationId: conversation.id });
     } catch (err: any) {
       setError(err.message || "Failed to create group");

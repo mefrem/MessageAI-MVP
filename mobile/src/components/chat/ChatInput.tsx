@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, TextInput, StyleSheet } from "react-native";
 import { IconButton } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
@@ -15,38 +15,38 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onTyping,
 }) => {
   const [text, setText] = useState("");
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
-    null
-  );
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  const handleSend = () => {
+    const trimmedText = text.trim();
+    if (trimmedText) {
+      onSendText(trimmedText);
+      setText("");
+      onTyping(false);
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+  };
 
   const handleTextChange = (value: string) => {
     setText(value);
 
     // Send typing indicator
-    onTyping(true);
+    if (value.trim()) {
+      onTyping(true);
 
-    // Clear existing timeout
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
-    }
-
-    // Set new timeout to stop typing indicator
-    const timeout = setTimeout(() => {
-      onTyping(false);
-    }, 1000);
-
-    setTypingTimeout(timeout);
-  };
-
-  const handleSend = () => {
-    if (text.trim()) {
-      onSendText(text.trim());
-      setText("");
-      onTyping(false);
-
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
       }
+
+      // Set new timeout to stop typing indicator
+      typingTimeoutRef.current = setTimeout(() => {
+        onTyping(false);
+      }, 1000);
     }
   };
 
@@ -60,12 +60,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       />
 
       <TextInput
+        ref={inputRef}
         style={styles.input}
         value={text}
         onChangeText={handleTextChange}
         placeholder="Type a message..."
-        multiline
+        multiline={false}
         maxLength={1000}
+        returnKeyType="send"
+        onSubmitEditing={handleSend}
+        blurOnSubmit={false}
+        enablesReturnKeyAutomatically
       />
 
       <IconButton
@@ -94,7 +99,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minHeight: 40,
-    maxHeight: 100,
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: "#F5F5F5",

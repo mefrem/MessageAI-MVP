@@ -474,3 +474,4 @@ From the PRD:
 ---
 
 **Built with ❤️ using React Native, Expo, and Firebase**
+

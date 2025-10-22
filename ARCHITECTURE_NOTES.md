@@ -326,3 +326,4 @@ Before production deployment:
 - [Expo Documentation](https://docs.expo.dev/)
 - [React Navigation](https://reactnavigation.org/)
 - [React Native Paper](https://callstack.github.io/react-native-paper/)
+
